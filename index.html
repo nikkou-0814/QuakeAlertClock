@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>地震情報取得</title>
+</head>
+<body>
+
+<h1 id="myClock"></h1>
+<div class="quakes">
+    <div style="display: flex;">
+        <div class="maxIntensity" id="maxIntensity">
+            <h2 id="earthquakeMaxIntensity">-</h2>
+        </div>
+        <div>
+            <h2 id="earthquakeLocation">-- --</h2>
+            <h2 id="earthquakeTime">--日--時--分</h2>
+            <div style="display: flex;">
+                <h2 id="earthquakeMagnitude">M -.-</h2>
+                <h2 id="EarthquakeDepth">深さ：--km</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 時計の表示を更新する関数
+function showTime() {
+    var date = new Date();
+    var h = date.getHours();
+    var m = date.getMinutes();
+    var s = date.getSeconds();
+    h = checkTime(h);
+    m = checkTime(m);
+    s = checkTime(s);
+    document.getElementById('myClock').innerHTML = h + ":" + m + ":" + s;
+    var t = setTimeout(showTime, 500);
+}
+
+// 桁数をチェックする関数
+function checkTime(i) {
+    if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+    return i;
+}
+
+// 地震情報を取得する関数
+async function fetchEarthquakeData() {
+    // eew_parserを使用して地震情報を取得します
+    const response = await fetch('https://api.p2pquake.net/v1/human-readable?limit=1');
+    const data = await response.json();
+
+    // データをコンソールに出力します
+    console.log(data);
+
+    // 地震情報が更新された場合、時計の文字色を変更します
+    if (data[0].earthquake) {
+        var maxIntensity = data[0].earthquake.maxScale / 10;
+        document.getElementById('myClock').style.color = "red";
+        document.getElementById('earthquakeTime').innerHTML = data[0].earthquake.time;
+        document.getElementById('earthquakeLocation').innerHTML = data[0].earthquake.hypocenter.name;
+        document.getElementById('earthquakeMagnitude').innerHTML = "M " + data[0].earthquake.hypocenter.magnitude;
+        document.getElementById('EarthquakeDepth').innerHTML = "深さ: " + data[0].earthquake.hypocenter.depth;
+        document.getElementById('earthquakeMaxIntensity').innerHTML = maxIntensity;
+        var intensityElement = document.getElementById('maxIntensity');
+        var maxtext = document.getElementById('earthquakeMaxIntensity');
+        if (maxIntensity == 1) {
+            intensityElement.style.backgroundColor = "gray";
+            maxtext.style.color = "white";
+        } else if (maxIntensity == 2) {
+            intensityElement.style.backgroundColor = "rgb(65, 65, 255)";
+            maxtext.style.color = "white";
+        } else if (maxIntensity == 3) {
+            intensityElement.style.backgroundColor = "rgb(0, 212, 0)";
+            maxtext.style.color = "black";
+        } else if (maxIntensity == 4) {
+            intensityElement.style.backgroundColor = "rgb(219, 219, 23)";
+            maxtext.style.color = "black";
+        } else if (maxIntensity == 5) {
+            intensityElement.style.backgroundColor = "rgb(255, 170, 0)";
+            maxtext.style.color = "black";
+        } else if (maxIntensity == 6) {
+            intensityElement.style.backgroundColor = "rgb(255, 0, 0)";
+            maxtext.style.color = "white";
+        } else if (maxIntensity == 7) {
+            intensityElement.style.backgroundColor = "rgb(255, 0, 255)";
+            maxtext.style.color = "white";
+        }
+    } else {
+        document.getElementById('myClock').style.color = "black";
+        document.getElementById('earthquakeTime').innerHTML = "地震情報: なし";
+        document.getElementById('earthquakeLocation').innerHTML = "";
+        document.getElementById('earthquakeMagnitude').innerHTML = "";
+        document.getElementById('earthquakeMaxIntensity').innerHTML = "";
+    }
+}
+
+// 一定時間ごとに地震情報を再取得します
+setTimeout(fetchEarthquakeData, 5000);
+
+// 関数を初期化します
+showTime();
+fetchEarthquakeData();
+</script>
+
+</body>
+</html>
